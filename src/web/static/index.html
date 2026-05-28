@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Domo Mission Control</title>
+  <link rel="stylesheet" href="/static/styles.css?v=20260527-domo">
+</head>
+<body>
+  <div id="login" class="login-screen hidden">
+    <div class="login-mark" aria-hidden="true">
+      <span></span>
+    </div>
+    <h1>DOMO</h1>
+    <p>MISSION CONTROL</p>
+    <form id="pin-form" class="login-panel">
+      <label for="pin-input">SECURITY PIN</label>
+      <input type="password" id="pin-input" autocomplete="current-password" autofocus required>
+      <button type="submit">UNLOCK</button>
+      <p id="pin-error" class="error"></p>
+    </form>
+  </div>
+
+  <div id="app" class="shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span>
+        </div>
+        <div>
+          <strong>DOMO</strong>
+          <span>MISSION CONTROL</span>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Mission sections">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon grid-icon" aria-hidden="true"></span>
+          <span>DASHBOARD</span>
+        </button>
+        <button class="nav-item" data-view="agents">
+          <span class="nav-icon agent-icon" aria-hidden="true"></span>
+          <span>AGENTS</span>
+        </button>
+        <button class="nav-item" data-view="cron">
+          <span class="nav-icon cron-icon" aria-hidden="true"></span>
+          <span>CRON / SCHEDULER</span>
+        </button>
+        <button class="nav-item" data-view="comms">
+          <span class="nav-icon log-icon" aria-hidden="true"></span>
+          <span>COMMS LOG</span>
+        </button>
+        <button class="nav-item" data-view="system">
+          <span class="nav-icon pulse-icon" aria-hidden="true"></span>
+          <span>SYSTEM HEALTH</span>
+        </button>
+        <button class="nav-item" data-view="memories">
+          <span class="nav-icon memory-icon" aria-hidden="true"></span>
+          <span>MEMORIES</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="nav-icon settings-icon" aria-hidden="true"></span>
+          <span>SETTINGS</span>
+        </button>
+      </nav>
+
+      <section class="network-panel">
+        <h2>NETWORK STATUS</h2>
+        <strong>SECURE</strong>
+        <div class="mini-map" aria-hidden="true"></div>
+        <dl>
+          <div><dt>UPLINK</dt><dd>LOCAL</dd></div>
+          <div><dt>LATENCY</dt><dd id="net-latency">--</dd></div>
+          <div><dt>ENCRYPTION</dt><dd>AES-256</dd></div>
+        </dl>
+      </section>
+
+      <div class="sidebar-motto">
+        <span>INFORMATION</span>
+        <span>IS NOT ENOUGH.</span>
+        <span>CONNECTION</span>
+        <span>IS THE MULTIPLIER.</span>
+      </div>
+
+      <button id="logout" class="ghost-button">LOGOUT</button>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="section-title">
+          <h1 id="current-section">DASHBOARD</h1>
+          <span id="current-mode">OVERVIEW</span>
+        </div>
+        <div class="top-actions">
+          <time id="clock">--:--:--</time>
+          <button id="refresh-all" class="icon-button" aria-label="Refresh dashboard">
+            <span class="refresh-glyph" aria-hidden="true"></span>
+          </button>
+          <div class="director-card">
+            <div class="director-avatar" aria-hidden="true"></div>
+            <div>
+              <strong>DIRECTOR</strong>
+              <span>CLEARANCE: OMEGA</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section id="view-dashboard" class="view active">
+          <div class="metric-grid">
+            <article class="metric-card">
+              <div>
+                <strong id="metric-unread">0</strong>
+                <span>MESSAGES</span>
+                <span>UNREAD</span>
+              </div>
+              <span class="metric-glyph chat-glyph" aria-hidden="true"></span>
+            </article>
+            <article class="metric-card">
+              <div>
+                <strong id="metric-agents-active">0/0</strong>
+                <span>AGENTS</span>
+                <span>ACTIVE</span>
+              </div>
+              <span class="metric-glyph user-glyph" aria-hidden="true"></span>
+            </article>
+            <article class="metric-card usage-card">
+              <div class="usage-card-header">
+                <span>USAGE</span>
+                <span id="metric-usage-runs">0 RUNS TODAY</span>
+              </div>
+              <div class="usage-stat-grid">
+                <div class="usage-stat">
+                  <span>DAILY COST</span>
+                  <strong id="metric-daily-cost">$0.00</strong>
+                  <small>TODAY - RESETS 12AM CT</small>
+                </div>
+                <div class="usage-stat">
+                  <span>LIFETIME TOKENS</span>
+                  <strong id="metric-lifetime-tokens">0</strong>
+                  <small id="metric-lifetime-caption">ALL-TIME TOTAL</small>
+                </div>
+              </div>
+              <div class="usage-sparkline" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </article>
+            <article class="metric-card" id="metric-credit-card" title="Anthropic Agent SDK credit governor">
+              <div>
+                <strong id="metric-credit-remaining">$--</strong>
+                <span>SDK CREDIT</span>
+                <span id="metric-credit-status">CHECKING</span>
+              </div>
+              <span class="metric-glyph brain-glyph" aria-hidden="true"></span>
+            </article>
+          </div>
+
+          <div class="panel-heading">
+            <h2>AGENTS</h2>
+            <button class="link-button" data-view-jump="agents">VIEW ALL</button>
+          </div>
+          <div id="dashboard-agent-cards" class="agent-card-grid"></div>
+
+          <section class="war-room-strip">
+            <div>
+              <h2>WAR ROOM</h2>
+              <p>Voice standby with your agent team</p>
+            </div>
+            <div id="voice-wave" class="waveform" aria-hidden="true"></div>
+            <div class="strip-actions">
+              <button class="primary-button disabled" type="button" disabled>JOIN WAR ROOM</button>
+              <button class="icon-button disabled" type="button" aria-label="War room settings" disabled>
+                <span class="settings-glyph" aria-hidden="true"></span>
+              </button>
+            </div>
+          </section>
+
+          <div class="dashboard-grid">
+            <section class="panel panel-wide">
+              <div class="panel-title-row">
+                <div>
+                  <h2>WAR ROOM VOICES</h2>
+                  <p>Manage voice config. Agents respond with their voice.</p>
+                </div>
+                <div class="button-row">
+                  <button class="ghost-button disabled" type="button" disabled>SAVE</button>
+                  <button class="primary-button disabled" type="button" disabled>SAVE & APPLY</button>
+                </div>
+              </div>
+              <div id="voice-config-list" class="voice-config-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-title-row">
+                <div>
+                  <h2>COMMS LOG</h2>
+                  <p>All agent communications</p>
+                </div>
+                <button class="link-button" data-view-jump="comms">VIEW ALL</button>
+              </div>
+              <div id="dashboard-comms-log" class="comms-log compact"></div>
+            </section>
+          </div>
+
+          <div class="lower-grid">
+            <section class="panel">
+              <h2>SYSTEM HEALTH</h2>
+              <div class="health-grid">
+                <div class="health-ring" aria-label="System utilization">
+                  <span id="health-percent">0%</span>
+                </div>
+                <div class="health-stat">
+                  <strong id="health-turns">0</strong>
+                  <span>TURNS</span>
+                </div>
+                <div class="health-stat">
+                  <strong id="health-age">LOCAL</strong>
+                  <span>AGE</span>
+                </div>
+                <div class="health-stat">
+                  <strong id="health-failures">0</strong>
+                  <span>FAILURES</span>
+                </div>
+              </div>
+              <div class="transport-row">
+                <span class="chip chip-green">DISCORD</span>
+                <span class="chip chip-red">VOICE</span>
+                <span class="chip chip-green">DASHBOARD</span>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-agents" class="view">
+          <div class="console-layout">
+            <aside class="console-rail">
+              <h2>COUNCIL</h2>
+              <div id="agent-list" class="agent-list"></div>
+            </aside>
+            <section class="chat-console">
+              <div class="chat-header">
+                <div>
+                  <h2 id="chat-title">SELECT AN AGENT</h2>
+                  <p id="chat-subtitle">Awaiting operator input</p>
+                </div>
+                <span id="chat-status" class="status-pill">STANDBY</span>
+              </div>
+              <div id="chat-log" class="chat-log"></div>
+              <form id="chat-form" class="chat-form">
+                <textarea id="chat-input" placeholder="Transmit message..." rows="3" disabled></textarea>
+                <button type="submit" id="chat-submit" class="primary-button" disabled>SEND</button>
+              </form>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-cron" class="view">
+          <section class="panel full-panel">
+            <div class="panel-title-row">
+              <div>
+                <h2>CRON / SCHEDULER</h2>
+                <p>Automated jobs and recurring tasks.</p>
+              </div>
+              <button id="cron-new-job-page" class="primary-button" type="button">+ NEW JOB</button>
+            </div>
+            <div class="scheduler-tabs">
+              <button class="scheduler-tab active" type="button" data-scheduler-page-tab="scheduled">SCHEDULED JOBS</button>
+              <button class="scheduler-tab" type="button" data-scheduler-page-tab="history">HISTORY</button>
+            </div>
+            <div id="scheduler-page-jobs" class="scheduler-page-jobs"></div>
+          </section>
+
+          <section id="cron-new-job-form" class="panel hidden">
+            <div class="panel-title-row">
+              <div>
+                <h2>NEW CRON JOB</h2>
+                <p>Schedule a recurring task. Cron expression interpreted in CRON_TZ (server env).</p>
+              </div>
+            </div>
+            <form id="cron-form">
+              <p><label>NAME<br><input type="text" name="name" required></label></p>
+              <p><label>DESCRIPTION<br><input type="text" name="description"></label></p>
+              <p><label>CRON EXPRESSION<br><input type="text" name="cron_expr" required placeholder="0 9 * * *"></label></p>
+              <p><label>TARGET AGENT<br>
+                <select name="target_agent" required>
+                  <option value="main">Daedalus (main)</option>
+                  <option value="research">Intel (research)</option>
+                  <option value="comms">Hermes (comms)</option>
+                </select>
+              </label></p>
+              <p><label>PROMPT<br><textarea name="prompt" required rows="4" cols="60"></textarea></label></p>
+              <p><label><input type="checkbox" name="fresh_session"> FRESH SESSION (new Claude session per firing — use for jobs whose judgment must not carry context across days)</label></p>
+              <p><label><input type="checkbox" name="agent_task"> AGENT TASK (no destination channel; run the prompt as-is. Required for jobs that don't post to Discord — e.g. agents that have no post_to_channel tool)</label></p>
+              <p id="cron-form-error" class="error"></p>
+              <p>
+                <button type="submit" class="primary-button">SAVE</button>
+                <button type="button" class="ghost-button" id="cron-form-cancel">CANCEL</button>
+              </p>
+            </form>
+          </section>
+        </section>
+
+        <section id="view-comms" class="view">
+          <section class="panel full-panel">
+            <div class="panel-title-row">
+              <div>
+                <h2>COMMS LOG</h2>
+                <p>Hive-mind ledger stream</p>
+              </div>
+              <button id="ledger-refresh" class="ghost-button">REFRESH</button>
+            </div>
+            <div class="ledger-controls">
+              <label>AGENT
+                <select id="ledger-agent">
+                  <option value="">ALL</option>
+                </select>
+              </label>
+              <label>STATUS
+                <select id="ledger-status">
+                  <option value="">ANY</option>
+                  <option value="queued">QUEUED</option>
+                  <option value="running">RUNNING</option>
+                  <option value="completed">COMPLETED</option>
+                  <option value="failed">FAILED</option>
+                  <option value="cancelled">CANCELLED</option>
+                </select>
+              </label>
+              <label>WINDOW MIN
+                <input type="number" id="ledger-window" value="240" min="1" max="10080">
+              </label>
+            </div>
+            <div id="ledger-rows" class="ledger-rows"></div>
+          </section>
+        </section>
+
+        <section id="view-system" class="view">
+          <section class="panel full-panel">
+            <div class="panel-title-row">
+              <div>
+                <h2>SYSTEM HEALTH</h2>
+                <p>Runtime surface for the local dashboard and council</p>
+              </div>
+              <button class="ghost-button" id="system-refresh">REFRESH</button>
+            </div>
+            <div id="system-detail" class="system-detail"></div>
+          </section>
+        </section>
+
+        <section id="view-memories" class="view">
+          <div class="vault-layout">
+            <aside id="vault-tree" class="vault-tree">
+              <h2>MEMORY VAULT</h2>
+              <div id="breadcrumbs" class="breadcrumbs"></div>
+              <ul id="entries" class="entries"></ul>
+            </aside>
+            <section id="vault-viewer" class="vault-viewer">
+              <h2 id="vault-file-name">SELECT A FILE</h2>
+              <pre id="vault-content"></pre>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-settings" class="view">
+          <section class="panel full-panel">
+            <h2>SETTINGS</h2>
+            <div class="settings-grid">
+              <article>
+                <span>Dashboard</span>
+                <strong>LOCAL ONLY</strong>
+                <p>Bound to 127.0.0.1 unless the service configuration changes.</p>
+              </article>
+              <article>
+                <span>Voice</span>
+                <strong>ROADMAP</strong>
+                <p>Browser mic, STT, agent turn, and TTS are planned for the next phase.</p>
+              </article>
+              <article>
+                <span>Automations</span>
+                <strong>ROADMAP</strong>
+                <p>Cron jobs, Telegram bridge, and proactive usage warnings remain deferred.</p>
+              </article>
+            </div>
+          </section>
+        </section>
+      </main>
+
+      <footer class="status-footer">
+        <span>+</span>
+        <span>DOMO MISSION CONTROL V2.7.7A</span>
+        <strong>OBSERVE. ANALYZE. COORDINATE. CONTROL.</strong>
+        <span>CLEARANCE LEVEL: OMEGA</span>
+        <span>+</span>
+      </footer>
+    </div>
+
+    <aside class="scheduler-rail">
+      <section class="scheduler-panel">
+        <div class="scheduler-title">
+          <h2>CRON / SCHEDULER</h2>
+          <p>Manage automated jobs and recurring tasks.</p>
+        </div>
+        <button id="cron-new-job-rail" class="primary-button scheduler-new-job" type="button">+ NEW JOB</button>
+        <div class="scheduler-tabs">
+          <button class="scheduler-tab active" type="button" data-scheduler-rail-tab="scheduled">SCHEDULED JOBS</button>
+          <button class="scheduler-tab" type="button" data-scheduler-rail-tab="history">HISTORY</button>
+        </div>
+        <div id="scheduler-rail-jobs" class="scheduler-jobs"></div>
+        <div class="scheduler-controls">
+          <div class="scheduler-control-row">
+            <span>AUTO-PAUSE ON HIGH LOAD</span>
+            <button id="cron-auto-pause" class="schedule-toggle on" type="button" aria-label="Auto-pause on high load (configured via CRON_AUTO_PAUSE env)" title="Configured via CRON_AUTO_PAUSE env, restart to apply" disabled></button>
+          </div>
+          <label class="scheduler-select-row">MAX CONCURRENT JOBS
+            <select id="cron-max-concurrent" disabled title="Configured via CRON_MAX_CONCURRENT env, restart to apply">
+              <option>3</option>
+            </select>
+          </label>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <script src="/static/app.js?v=20260518-rr-delete"></script>
+</body>
+</html>

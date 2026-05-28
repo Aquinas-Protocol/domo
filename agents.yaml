@@ -1,0 +1,80 @@
+# Agent registry for the Domo council.
+# Adding an agent: append a new entry, create the persona file, set the env vars
+# in .env, restart the service. No code changes needed.
+#
+# Fields:
+#   display_name : Bot account display name. Each agent has its own Discord bot
+#                  application; this is the name as it appears in Discord.
+#   persona_file : path RELATIVE to the second-brain vault root.
+#   token_env    : env var name in .env that holds the agent's Discord bot token.
+#   channel_env  : env var name in .env that holds the Discord channel ID
+#                  this agent owns (DMs + this channel + threads here).
+#   webhook_env  : OPTIONAL env var for a Discord webhook URL. Rarely used now
+#                  that each agent has its own bot account; reserved for niche
+#                  cross-agent posting (e.g. Maine dropping a notice in #research
+#                  under a different display name). Leave unset by default.
+#   can_delegate : only true for the main agent; controls whether the runner
+#                  gets delegate_to_* MCP tools.
+#   enabled_tools: null = inherit defaults (all Claude Code tools). Otherwise a
+#                  list of tool names to allow. Used to keep specialists focused.
+#   model        : Claude model alias ('opus', 'sonnet', 'haiku') OR full name
+#                  (e.g. 'claude-opus-4-6', 'claude-sonnet-4-6'). null = inherit
+#                  whatever DEFAULT_LLM_MODEL the service env captured at start
+#                  (NOT recommended — pin explicitly so model choice is durable
+#                  across restarts). Cross-provider models (GPT-5 etc.) are NOT
+#                  supported here — the Claude Agent SDK only routes to Claude.
+#   dashboard_visible : optional, default true. Set to false for single-task
+#                  scheduled agents that shouldn't clutter Mission Control's
+#                  agent grid or war-room voice config. The agent stays in
+#                  state.agents (ledger filter, online counts, metrics, cron
+#                  dropdowns all keep working) — only the three render
+#                  functions filter it out (renderAgentCards, renderAgentList,
+#                  renderVoiceConfig).
+
+agents:
+  main:
+    display_name: "Maine"
+    persona_file: "agents/main.md"
+    token_env: MAIN_DISCORD_TOKEN
+    channel_env: MAIN_CHANNEL_ID
+    webhook_env: MAIN_WEBHOOK_URL
+    can_delegate: true
+    enabled_tools: null
+    model: claude-sonnet-4-6
+    auto_thread: true
+
+  research:
+    display_name: "Intel"
+    persona_file: "agents/research.md"
+    token_env: RESEARCH_DISCORD_TOKEN
+    channel_env: RESEARCH_CHANNEL_ID
+    webhook_env: RESEARCH_WEBHOOK_URL
+    can_delegate: false
+    enabled_tools:
+      - WebFetch
+      - WebSearch
+      - Read
+      - Grep
+      - Glob
+      - Bash
+      - Write
+      - Edit
+    model: claude-opus-4-7
+    auto_thread: true
+
+  comms:
+    display_name: "Hermes"
+    persona_file: "agents/comms.md"
+    token_env: COMMS_DISCORD_TOKEN
+    channel_env: COMMS_CHANNEL_ID
+    webhook_env: COMMS_WEBHOOK_URL
+    can_delegate: false
+    enabled_tools:
+      - Read
+      - Grep
+      - Glob
+      - WebFetch
+      - Write
+      - Edit
+    model: claude-opus-4-7
+    auto_thread: true

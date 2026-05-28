@@ -1,0 +1,44 @@
+[project]
+name = "domo"
+version = "0.1.0"
+description = "Domo — a personal Discord-fronted Claude Code assistant: an operator agent plus per-thread sub-agents over the second-brain vault"
+requires-python = ">=3.11"
+dependencies = [
+    "discord.py>=2.4",
+    "claude-agent-sdk>=0.1.0",
+    "python-dotenv>=1.0",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "bcrypt>=4.2",
+    "itsdangerous>=2.2",
+    "croniter>=2.0",
+    "tzdata>=2024.1",
+    "caldav>=3.2",
+    "vobject>=0.9",
+    "pywin32>=306; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["src", "src.web", "hooks", "broker"]
+
+[tool.setuptools.package-data]
+"src.web" = ["static/*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# Sandboxed users (e.g. Codex) lack write access to .pytest_cache; disabling the cache
+# prevents agents from "fixing" the warning by redirecting basetemp into the vault.
+addopts = "-p no:cacheprovider"
