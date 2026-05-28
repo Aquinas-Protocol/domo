@@ -116,3 +116,7 @@ Install both from an elevated PowerShell:
 - `hooks/pretooluse_guard.py` — write/read guard hook.
 - `agents.yaml` — agent roster. `agents/*.md` — persona files.
 - `wizard.py` — interactive first-run setup.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Builds on the [second-brain](https://github.com/Aquinas-Protocol/second-brain) vault (also MIT).
