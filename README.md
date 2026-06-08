@@ -4,6 +4,8 @@
 
 This is the public, standalone extraction of a personal bot. The generic council + infrastructure are here; the owner's personal integrations are intentionally left out (see [Not included](#not-included)).
 
+> **Security writeup:** for the full agent-security threat model behind Domo — these controls mapped onto the [OWASP LLM Top 10 (2025)](https://owasp.org/www-project-top-10-for-large-language-model-applications/) — see [*A threat model for a personal multi-agent system*](https://dylan-palumbo.com/writing/discord-ops-security-model/).
+
 ## Features
 
 - **Council of agents** — an operator (`main`) that can delegate, plus `research` (deep web research) and `comms` (correspondence) specialists. Each agent is a separate Discord bot account with its own channel, persona file, model, and tool allowlist (`agents.yaml`).
@@ -63,6 +65,8 @@ py -m src.bot
 Or install as a Windows service via NSSM for always-on operation (see `install_service.ps1` and the wizard output).
 
 ## Security
+
+> Beyond the elevation-broker specifics below, the complete agent-security threat model — every control here mapped onto the OWASP LLM Top 10 — is written up in [*A threat model for a personal multi-agent system*](https://dylan-palumbo.com/writing/discord-ops-security-model/).
 
 **Read this before enabling the elevation broker.**
 
