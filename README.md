@@ -14,6 +14,7 @@ This is the public, standalone extraction of a personal bot. The generic council
 - **Cron scheduler** — schedule recurring or one-shot agent runs (`mcp__cron__*` tools + a dashboard panel); results post to a channel.
 - **Calendar** — Apple iCloud CalDAV read for the whole council, write for `main`/`comms` (`mcp__calendar_read__*` / `mcp__calendar_write__*`). Skipped unless iCloud creds are set.
 - **Video / watch** — `watch_video` for the research agent (wraps a `/watch` skill if installed).
+- **Voice notes (TTS)** — `src/voice/`: ElevenLabs text-to-speech to a temp mp3, budget-gated by a per-day character ceiling, played live in a Discord voice channel with an mp3 attachment fallback. See [Voice notes](#voice-notes-elevenlabs-tts).
 - **GPT-5 specialist** — an `mcp__specialist__query_gpt5` tool that shells out to a local Codex CLI, so the council can consult a non-Claude model. Skipped unless the Codex CLI is found.
 - **Admin elevation** — an operator-only `request_admin_elevation` tool with a Discord Approve/Deny flow, executed by a **separate elevated broker service**. See [Security](#security) before enabling.
 - **Credit governor** — tracks Anthropic Agent SDK spend against a monthly ceiling and can refuse new runs when exhausted (observe-only by default).
@@ -106,6 +107,21 @@ Install both from an elevated PowerShell:
 .\broker\install_broker.ps1      # broker, runs as LocalSystem (see Security)
 ```
 
+## Voice notes (ElevenLabs TTS)
+
+The voice subsystem (`src/voice/`) turns an agent's end-of-run summary into a spoken brief: synthesize ~60 seconds of audio via ElevenLabs, play it in a Discord voice channel, and attach the mp3 to a text channel so the brief survives if nobody is listening live. In the owner's deployment it runs as the final step of the (omitted) reverse-recruiter morning cron; the mirrored package is the complete mechanics, callable from any agent-scoped MCP tool.
+
+- `src/voice/elevenlabs_client.py` — thin httpx client against the streaming TTS endpoint (`/v1/text-to-speech/{voice_id}/stream`), no SDK. Model pinned to `eleven_turbo_v2_5` at `mp3_22050_32`: a once-a-day cron summary is latency-tolerant, so the cheap/fast tier beats higher-fidelity formats on every axis that matters here.
+- `src/voice/voice_channel_player.py` — discord.py playback: join → play → await the `after` callback → always disconnect (`try/finally`), so no orphan voice client outlives a failed playback. `VoiceClient.play()` is non-blocking; completion is bridged from the player thread with `call_soon_threadsafe`.
+- `src/voice/budget.py` — per-day character ceiling (default 2,000) enforced as a single conditional `UPDATE` against `voice_tts_usage` in `sessions.sqlite`. It consumes *before* the API call: over-counting is the safe direction for a spend ceiling. Defense in depth: restrict the API key provider-side too (TTS-only scope, per-cycle credit cap).
+- The calling tool treats budget exhaustion as a data answer (`ok=false reason=budget`), not a tool error — so the agent reports it and moves on instead of retrying. Playback failure degrades to attachment-only; only a double failure errors.
+
+The summary text is composed by the agent per its cron directive (~150 words), not in code — the tool owns mechanics, the persona owns words.
+
+**Multi-tenant translation** — what this control looks like deployed for customers rather than one user: the budget gate becomes a `(tenant_id, date)`-keyed allowance with per-tenant voice IDs and output formats; the usage row gains tenant scope for audit; and the provider-side key restriction becomes per-tenant scoped keys, so one tenant's runaway loop can't drain a shared credit pool. The single-tenant version here is deliberately the smallest correct shape of that design.
+
+**Failure modes hit while shipping:** (1) the voice step was first wired into the cron *prompt* — dead code on the live path, because the owner's scan pipeline runs server-side and never dispatches an agent with that prompt; the fix is a scheduler-side dispatch after a successful scan, pinned by tests. The lesson: once parts of a cron move server-side, "the cron prompt" is no longer "the cron behavior". (2) `discord.opus.is_loaded()` is `False` at import on Windows — the bundled DLL lazy-loads on first voice connect; call `discord.opus._load_default()` if you need to verify it earlier. (3) ElevenLabs streaming mp3s carry no Xing header, so ffmpeg logs a benign "estimating duration from bitrate" warning on every playback. (4) Schema lineage: this table ships as migration v19 here but v22 in the owner's private lineage — migration numbers are deployment-local, which is exactly why the migration runner keys on `PRAGMA user_version` per database rather than a global registry.
+
 ## Layout
 
 - `src/config.py` — constants, env loading, the agent registry loader.
@@ -116,6 +132,7 @@ Install both from an elevated PowerShell:
 - `src/calendar_*.py` — CalDAV client + read/write MCP tools.
 - `src/specialist_*.py` — GPT-5-via-Codex specialist tool + store.
 - `src/elevation_*.py` / `broker/` — Discord-approved admin elevation (operator tool + elevated broker service).
+- `src/voice/` — ElevenLabs TTS client, daily character budget, voice-channel player.
 - `src/web/` — FastAPI dashboard (routes, auth, vault browser, static SPA).
 - `hooks/pretooluse_guard.py` — write/read guard hook.
 - `agents.yaml` — agent roster. `agents/*.md` — persona files.

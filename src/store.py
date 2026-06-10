@@ -20,7 +20,7 @@ from src.config import BILLING_CYCLE_START_DAY, SESSIONS_DB
 
 log = logging.getLogger(__name__)
 
-CURRENT_VERSION = 18
+CURRENT_VERSION = 19
 BUSY_TIMEOUT_MS = 5000
 
 
@@ -788,6 +788,24 @@ def _migration_v18(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migration_v19(conn: sqlite3.Connection) -> None:
+    """Per-day ElevenLabs TTS character ledger (voice-notes budget gate).
+
+    One row per UTC date; src/voice/budget.py consumes via a conditional
+    UPDATE so the daily ceiling holds atomically. Deliberately separate
+    accounting from task_ledger/credit_governor — that's Anthropic spend,
+    this is ElevenLabs subscription credits.
+    """
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS voice_tts_usage (
+            date        TEXT PRIMARY KEY,
+            chars_used  INTEGER NOT NULL DEFAULT 0
+        )
+        """
+    )
+
+
 MIGRATIONS = {
     1: _migration_v1,
     2: _migration_v2,
@@ -807,6 +825,7 @@ MIGRATIONS = {
     16: _migration_v16,
     17: _migration_v17,
     18: _migration_v18,
+    19: _migration_v19,
 }
 
 

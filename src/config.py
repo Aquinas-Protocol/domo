@@ -97,6 +97,15 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 OPERATOR_USER_ID = int(os.getenv("OPERATOR_USER_ID", "0")) or None
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+# ElevenLabs TTS voice notes. ELEVENLABS_DAILY_CHAR_BUDGET is a runaway
+# ceiling in characters/day, enforced app-side in src/voice/budget.py
+# against the voice_tts_usage table — deliberately separate from
+# task_ledger/credit_governor, which track Anthropic spend. The API key is
+# also restricted provider-side (TTS-only scope, per-cycle credit cap).
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID")
+ELEVENLABS_DAILY_CHAR_BUDGET = int(os.getenv("ELEVENLABS_DAILY_CHAR_BUDGET", "2000"))
+
 # Phase 2B-1 dashboard
 DASHBOARD_BIND_HOST = os.getenv("DASHBOARD_BIND_HOST", "127.0.0.1")
 DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", "8080"))
